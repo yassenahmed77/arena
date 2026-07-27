@@ -76,6 +76,7 @@ export interface Course {
   id: string;
   title: string;
   platform?: string;
+  unitType?: "lessons" | "hours";
   totalLessons: number;
   completedLessons: number;
   url?: string;

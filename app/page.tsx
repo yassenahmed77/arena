@@ -7,7 +7,8 @@ import Shopify from "@/components/Shopify";
 import Courses from "@/components/Courses";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"arena" | "checklist" | "shopify" | "courses">("arena");
+  // Default active tab set to "courses"
+  const [activeTab, setActiveTab] = useState<"arena" | "checklist" | "shopify" | "courses">("courses");
 
   return (
     <main className="max-w-[820px] mx-auto px-6 py-8 min-h-screen flex flex-col justify-between">
@@ -33,6 +34,16 @@ export default function Home() {
 
           {/* Spacious Pill Tab Switcher */}
           <nav className="inline-flex items-center gap-1.5 p-1.5 bg-panel border border-line rounded-full flex-shrink-0 self-start md:self-auto">
+            <button
+              onClick={() => setActiveTab("courses")}
+              className={`min-h-[36px] px-3.5 sm:px-4 py-1.5 font-mono text-xs font-bold rounded-full transition-all duration-150 ${
+                activeTab === "courses"
+                  ? "bg-accent text-bg"
+                  : "text-text-dim hover:text-text"
+              }`}
+            >
+              Courses
+            </button>
             <button
               onClick={() => setActiveTab("arena")}
               className={`min-h-[36px] px-3.5 sm:px-4 py-1.5 font-mono text-xs font-bold rounded-full transition-all duration-150 ${
@@ -63,28 +74,18 @@ export default function Home() {
             >
               Shopify
             </button>
-            <button
-              onClick={() => setActiveTab("courses")}
-              className={`min-h-[36px] px-3.5 sm:px-4 py-1.5 font-mono text-xs font-bold rounded-full transition-all duration-150 ${
-                activeTab === "courses"
-                  ? "bg-accent text-bg"
-                  : "text-text-dim hover:text-text"
-              }`}
-            >
-              Courses
-            </button>
           </nav>
         </header>
 
         {/* Tab Content */}
-        {activeTab === "arena" ? (
+        {activeTab === "courses" ? (
+          <Courses />
+        ) : activeTab === "arena" ? (
           <Arena />
         ) : activeTab === "checklist" ? (
           <Checklist />
-        ) : activeTab === "shopify" ? (
-          <Shopify />
         ) : (
-          <Courses />
+          <Shopify />
         )}
       </div>
 

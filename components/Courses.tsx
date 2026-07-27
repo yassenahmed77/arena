@@ -7,7 +7,8 @@ export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [title, setTitle] = useState("");
   const [platform, setPlatform] = useState("");
-  const [totalLessons, setTotalLessons] = useState<number | "">(10);
+  const [unitType, setUnitType] = useState<"lessons" | "hours">("lessons");
+  const [totalValue, setTotalValue] = useState<number | "">(10);
 
   useEffect(() => {
     setCourses(loadCourses());
@@ -16,13 +17,14 @@ export default function Courses() {
   const handleAddCourse = () => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
-    const lessonsNum = typeof totalLessons === "number" && totalLessons > 0 ? totalLessons : 10;
+    const num = typeof totalValue === "number" && totalValue > 0 ? totalValue : 10;
 
     const newCourse: Course = {
       id: Date.now().toString(),
       title: trimmedTitle,
       platform: platform.trim() || undefined,
-      totalLessons: lessonsNum,
+      unitType: unitType,
+      totalLessons: num,
       completedLessons: 0,
     };
 
@@ -32,13 +34,13 @@ export default function Courses() {
 
     setTitle("");
     setPlatform("");
-    setTotalLessons(10);
+    setTotalValue(10);
   };
 
   const handleUpdateCompleted = (id: string, delta: number) => {
     const updated = courses.map((c) => {
       if (c.id === id) {
-        const nextCompleted = Math.max(0, Math.min(c.totalLessons, c.completedLessons + delta));
+        const nextCompleted = Math.max(0, Math.min(c.totalLessons, Number((c.completedLessons + delta).toFixed(1))));
         return { ...c, completedLessons: nextCompleted };
       }
       return c;
@@ -66,9 +68,9 @@ export default function Courses() {
   };
 
   // Overall progress calculations
-  const totalLessonsAll = courses.reduce((sum, c) => sum + c.totalLessons, 0);
-  const completedLessonsAll = courses.reduce((sum, c) => sum + c.completedLessons, 0);
-  const overallPercentage = totalLessonsAll > 0 ? Math.round((completedLessonsAll / totalLessonsAll) * 100) : 0;
+  const totalUnitsAll = courses.reduce((sum, c) => sum + c.totalLessons, 0);
+  const completedUnitsAll = courses.reduce((sum, c) => sum + c.completedLessons, 0);
+  const overallPercentage = totalUnitsAll > 0 ? Math.round((completedUnitsAll / totalUnitsAll) * 100) : 0;
 
   return (
     <div className="space-y-6 w-full">
@@ -80,7 +82,7 @@ export default function Courses() {
               Courses Dashboard
             </h2>
             <p className="text-xs font-mono text-text-dim mt-0.5">
-              {courses.length} {courses.length === 1 ? "Course" : "Courses"} · {completedLessonsAll} / {totalLessonsAll} Lessons Completed ({overallPercentage}%)
+              {courses.length} {courses.length === 1 ? "Course" : "Courses"} · Total Progress ({overallPercentage}%)
             </p>
           </div>
           <span className="text-sm font-mono font-bold text-accent bg-accent/10 px-3 py-1 rounded border border-accent/30">
@@ -106,10 +108,10 @@ export default function Courses() {
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
           <input
             type="text"
-            placeholder="Course Title (e.g. React & Next.js Masterclass)..."
+            placeholder="Course Title (e.g. Next.js Masterclass)..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="sm:col-span-5 min-h-[40px] bg-bg border border-line rounded px-3 py-2 text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-accent font-mono"
+            className="sm:col-span-4 min-h-[40px] bg-bg border border-line rounded px-3 py-2 text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-accent font-mono"
           />
           <input
             type="text"
@@ -118,19 +120,28 @@ export default function Courses() {
             onChange={(e) => setPlatform(e.target.value)}
             className="sm:col-span-3 min-h-[40px] bg-bg border border-line rounded px-3 py-2 text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-accent font-mono"
           />
+          <select
+            value={unitType}
+            onChange={(e) => setUnitType(e.target.value as "lessons" | "hours")}
+            className="sm:col-span-2 min-h-[40px] bg-bg border border-line rounded px-2 py-2 text-xs text-text focus:outline-none focus:border-accent font-mono cursor-pointer"
+          >
+            <option value="lessons">Lessons</option>
+            <option value="hours">Hours (Duration)</option>
+          </select>
           <input
             type="number"
-            min={1}
-            placeholder="Lessons count..."
-            value={totalLessons}
-            onChange={(e) => setTotalLessons(e.target.value === "" ? "" : Number(e.target.value))}
+            min={0.5}
+            step={unitType === "hours" ? 0.5 : 1}
+            placeholder={unitType === "hours" ? "Total Hours..." : "Total Lessons..."}
+            value={totalValue}
+            onChange={(e) => setTotalValue(e.target.value === "" ? "" : Number(e.target.value))}
             className="sm:col-span-2 min-h-[40px] bg-bg border border-line rounded px-3 py-2 text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-accent font-mono"
           />
           <button
             onClick={handleAddCourse}
-            className="sm:col-span-2 min-h-[40px] bg-accent text-bg font-mono font-bold text-xs rounded hover:opacity-90 transition-opacity"
+            className="sm:col-span-1 min-h-[40px] bg-accent text-bg font-mono font-bold text-xs rounded hover:opacity-90 transition-opacity"
           >
-            Add Course
+            Add
           </button>
         </div>
       </div>
@@ -143,8 +154,11 @@ export default function Courses() {
           </div>
         ) : (
           courses.map((course) => {
+            const isHours = course.unitType === "hours";
+            const unitLabel = isHours ? "Hours" : "Lessons";
             const pct = Math.round((course.completedLessons / course.totalLessons) * 100);
             const isCompleted = course.completedLessons >= course.totalLessons;
+            const stepDelta = isHours ? 0.5 : 1;
 
             return (
               <div
@@ -163,6 +177,9 @@ export default function Courses() {
                         {course.platform}
                       </span>
                     )}
+                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-line bg-bg text-text-dim flex-shrink-0">
+                      {unitLabel}
+                    </span>
                     {isCompleted && (
                       <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-pass/10 text-pass border border-pass/30 flex-shrink-0">
                         COMPLETED
@@ -184,7 +201,7 @@ export default function Courses() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-mono text-text-dim">
                     <span>
-                      {course.completedLessons} / {course.totalLessons} Lessons
+                      {course.completedLessons} / {course.totalLessons} {unitLabel}
                     </span>
                     <span className="font-bold text-text">{pct}%</span>
                   </div>
@@ -205,26 +222,27 @@ export default function Courses() {
                 <div className="flex items-center justify-between gap-3 pt-2 border-t border-line/60">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleUpdateCompleted(course.id, -1)}
+                      onClick={() => handleUpdateCompleted(course.id, -stepDelta)}
                       disabled={course.completedLessons <= 0}
-                      className="w-8 h-8 flex items-center justify-center bg-panel-2 border border-line text-text text-sm font-bold rounded hover:border-accent disabled:opacity-40 transition-colors"
+                      className="min-w-[32px] h-8 px-2 flex items-center justify-center bg-panel-2 border border-line text-text text-xs font-bold rounded hover:border-accent disabled:opacity-40 transition-colors"
                     >
-                      -1
+                      -{stepDelta}
                     </button>
                     <input
                       type="number"
                       min={0}
                       max={course.totalLessons}
+                      step={stepDelta}
                       value={course.completedLessons}
-                      onChange={(e) => handleDirectCompletedChange(course.id, parseInt(e.target.value) || 0)}
+                      onChange={(e) => handleDirectCompletedChange(course.id, parseFloat(e.target.value) || 0)}
                       className="w-16 h-8 text-center bg-bg border border-line rounded text-xs text-text font-mono focus:outline-none focus:border-accent"
                     />
                     <button
-                      onClick={() => handleUpdateCompleted(course.id, 1)}
+                      onClick={() => handleUpdateCompleted(course.id, stepDelta)}
                       disabled={course.completedLessons >= course.totalLessons}
-                      className="w-8 h-8 flex items-center justify-center bg-panel-2 border border-line text-text text-sm font-bold rounded hover:border-accent disabled:opacity-40 transition-colors"
+                      className="min-w-[32px] h-8 px-2 flex items-center justify-center bg-panel-2 border border-line text-text text-xs font-bold rounded hover:border-accent disabled:opacity-40 transition-colors"
                     >
-                      +1
+                      +{stepDelta}
                     </button>
                   </div>
 
