@@ -57,15 +57,24 @@ export default function Shopify() {
     const mod = SHOPIFY_MODULES[moduleIndex] || SHOPIFY_MODULES[0];
 
     try {
-      const systemPrompt = `You are a Shopify development mentor building a hands-on curriculum for a self-taught frontend developer named Yaseen who is pivoting toward Shopify freelancing (theme + app dev for merchant clients). Generate ONE practical task for the given module. Write the task itself in Franco-Arabic (Arabic transliterated in Latin letters); any code, Liquid syntax, or API field names stay in normal code syntax within the text. Respond with ONLY raw JSON, no markdown fences:
-{"task": "string (Franco-Arabic, a concrete practical exercise)", "hint": "string (Franco-Arabic, one short optional hint)", "expectedFormat": "code"|"explanation"|"mixed"}`;
+      const systemPrompt = `You are a Shopify development mentor building a practical, hands-on curriculum for Yaseen who is pivoting toward Shopify freelancing (theme + app dev for merchant clients).
+
+Generate ONE short, numbered build walkthrough (3-6 concrete ordered steps) for a real piece of Shopify work belonging to this module's focus. Frame it as "do this in your dev store / theme code," referencing real Shopify files (e.g. product.liquid, sections/header.liquid, schema.json), APIs, CLI commands, or Liquid objects.
+
+Respond ONLY with raw JSON (no markdown fences):
+{
+  "title": "string, Franco-Arabic, short — names the real thing being built (e.g. 'Sale Badge on Product Page')",
+  "steps": ["step 1 description in Franco-Arabic", "step 2...", "step 3..."],
+  "appliesTo": "string, Franco-Arabic, one line — which part of a real client site this maps to (e.g. 'أي theme فيه منتجات عليها خصم')",
+  "expectedFormat": "code"|"explanation"|"mixed"
+}`;
 
       const userPrompt = `Module title: ${mod.title}. Focus: ${mod.focus}.${
-        iteration > 0 ? " Generate a DIFFERENT practical task than last time." : ""
+        iteration > 0 ? " Generate a DIFFERENT real-world build walkthrough than last time." : ""
       }`;
 
       const apiTask = await callClaudeApi(systemPrompt, userPrompt);
-      if (apiTask && apiTask.task) {
+      if (apiTask && apiTask.title && Array.isArray(apiTask.steps)) {
         setTaskData(apiTask);
         setIsGenerating(false);
         return;
@@ -92,10 +101,18 @@ export default function Shopify() {
     let review = generateLocalShopifyReview(currentModule, answer);
 
     try {
-      const systemPrompt = `You are a direct, no-fluff Shopify mentor reviewing Yaseen's submission for a specific curriculum module. Respond in Franco-Arabic, short and practical — what's correct, what's wrong or missing, one concrete fix. Only mark "mastered": true if the submission genuinely demonstrates the module's focus competently; be honest, not encouraging-by-default. Respond with ONLY raw JSON, no markdown fences:
+      const systemPrompt = `You are a direct, no-fluff Shopify mentor reviewing Yaseen's submission for a specific curriculum module.
+
+Review Yaseen's submission AGAINST the required build steps listed below. Check if he followed the sequence, hit the real Shopify concepts named in each step, and produced a solution that would actually work on a live theme/store.
+
+Respond in Franco-Arabic, short and practical — what's correct, what's wrong or missing, and one concrete fix.
+Only mark "mastered": true if the submission genuinely demonstrates step completion and competency for live client sites.
+
+Respond ONLY with raw JSON (no markdown fences):
 {"feedback": "string (Franco-Arabic, 2-5 sentences)", "mastered": boolean}`;
 
-      const userPrompt = `Module: ${currentModule.title} (${currentModule.focus}).\nTask: ${taskData.task}\nUser Submission:\n${answer}`;
+      const stepsList = taskData.steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
+      const userPrompt = `Module: ${currentModule.title} (${currentModule.focus}).\nTask Title: ${taskData.title}\nApplies To: ${taskData.appliesTo}\nRequired Steps:\n${stepsList}\n\nUser Submission:\n${answer}`;
 
       const apiReview = await callClaudeApi(systemPrompt, userPrompt);
       if (apiReview && typeof apiReview.mastered === "boolean") {
@@ -122,7 +139,7 @@ export default function Shopify() {
     const newLogEntry: ShopifyLogEntry = {
       moduleId: currentModule.id,
       moduleTitle: currentModule.title,
-      task: taskData.task,
+      task: `${taskData.title}: ${taskData.steps[0] || ""}`,
       feedback: review.feedback,
       mastered: review.mastered,
       date: new Date().toISOString(),
@@ -285,23 +302,45 @@ export default function Shopify() {
               <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse-dot animate-pulse-dot-delay-1" />
               <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse-dot animate-pulse-dot-delay-2" />
             </div>
-            <span>loading module task…</span>
+            <span>loading build walkthrough…</span>
           </div>
         ) : taskData ? (
           <>
             {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-line">
-              <h3 className="font-heading font-bold text-lg text-text">
-                {currentModule.title}
-              </h3>
+              <div>
+                <h3 className="font-heading font-bold text-lg text-text">
+                  {taskData.title || currentModule.title}
+                </h3>
+                <span className="text-xs font-mono text-text-dim mt-0.5 block">
+                  Module: {currentModule.title}
+                </span>
+              </div>
               <span className="text-xs font-mono px-2.5 py-0.5 rounded border border-line bg-panel-2 text-text-dim max-w-[300px] truncate">
                 {currentModule.focus}
               </span>
             </div>
 
-            {/* Task description */}
-            <div className="text-sm font-mono text-text leading-relaxed whitespace-pre-line">
-              {taskData.task}
+            {/* Applies To Banner */}
+            {taskData.appliesTo && (
+              <div className="p-3 bg-panel-2 border border-line rounded text-xs font-mono text-text">
+                <span className="font-bold text-accent">📌 Applies to: </span>
+                <span>{taskData.appliesTo}</span>
+              </div>
+            )}
+
+            {/* Step-by-step numbered build list */}
+            <div className="space-y-2">
+              <span className="text-xs font-mono font-bold text-text-dim uppercase tracking-wider block">
+                Build Steps (Walkthrough):
+              </span>
+              <ol className="space-y-2.5 pl-4 list-decimal font-mono text-sm text-text leading-relaxed">
+                {taskData.steps.map((step, idx) => (
+                  <li key={idx} className="pl-1">
+                    {step}
+                  </li>
+                ))}
+              </ol>
             </div>
 
             {/* Optional Hint Toggle */}
@@ -326,7 +365,7 @@ export default function Shopify() {
               spellCheck={false}
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Ektib el-answer bta3ak hna (Liquid code, schema JSON, GraphQL query, aw explanation)..."
+              placeholder="Ektib el-code aw el-explanation bta3ak hna le-tatbiq el-خطوات (Liquid code, schema JSON, CLI commands, GraphQL query, etc)..."
               rows={8}
               className="w-full bg-bg border border-line rounded p-4 font-mono text-sm text-text focus:outline-none focus:border-accent transition-colors resize-y"
             />
