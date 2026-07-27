@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #14161c;
+  --panel: #1b1e28;
+  --panel-2: #21242f;
+  --line: #2c3040;
+  --text: #e9e7df;
+  --text-dim: #8b90a3;
+  --accent: #f2a65a;
+  --pass: #59c9a5;
+  --fail: #e5636b;
+  --white-belt: #f4f1ea;
+  --yellow-belt: #e8c547;
+  --orange-belt: #e08a3e;
+  --green-belt: #4caf6e;
+  --blue-belt: #4a90d9;
+  --brown-belt: #8a5a3c;
+  --black-belt: #1a1a1a;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-jetbrains-mono), monospace;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom pulsing loading animation */
+@keyframes pulseDot {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.1); }
+}
+
+.animate-pulse-dot {
+  animation: pulseDot 1.4s infinite ease-in-out both;
+}
+
+.animate-pulse-dot-delay-1 {
+  animation-delay: 0.2s;
+}
+
+.animate-pulse-dot-delay-2 {
+  animation-delay: 0.4s;
+}
