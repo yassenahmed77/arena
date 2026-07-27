@@ -10,6 +10,10 @@ export default function Courses() {
   const [unitType, setUnitType] = useState<"lessons" | "hours">("lessons");
   const [totalValue, setTotalValue] = useState<number | "">(10);
 
+  // Drag and drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   useEffect(() => {
     setCourses(loadCourses());
   }, []);
@@ -63,6 +67,50 @@ export default function Courses() {
 
   const handleDeleteCourse = (id: string) => {
     const updated = courses.filter((c) => c.id !== id);
+    setCourses(updated);
+    saveCourses(updated);
+  };
+
+  // Drag and Drop reorder handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const updated = [...courses];
+    const [removed] = updated.splice(draggedIndex, 1);
+    updated.splice(dropIndex, 0, removed);
+
+    setCourses(updated);
+    saveCourses(updated);
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const moveCourse = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= courses.length) return;
+
+    const updated = [...courses];
+    const [removed] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, removed);
+
     setCourses(updated);
     saveCourses(updated);
   };
@@ -146,29 +194,66 @@ export default function Courses() {
         </div>
       </div>
 
-      {/* Courses List */}
+      {/* Courses List with Drag & Drop Reordering */}
       <div className="space-y-4">
         {courses.length === 0 ? (
           <div className="bg-panel border border-line rounded-lg py-12 text-center text-text-dim text-sm font-mono italic">
             مفيش كورسات مضافة لسه. ضيف كورس جديد من فوق.
           </div>
         ) : (
-          courses.map((course) => {
+          courses.map((course, index) => {
             const isHours = course.unitType === "hours";
             const unitLabel = isHours ? "Hours" : "Lessons";
             const pct = Math.round((course.completedLessons / course.totalLessons) * 100);
             const isCompleted = course.completedLessons >= course.totalLessons;
             const stepDelta = isHours ? 0.5 : 1;
+            const isDragging = draggedIndex === index;
+            const isDragOver = dragOverIndex === index;
 
             return (
               <div
                 key={course.id}
-                className={`bg-panel border border-line rounded-lg p-5 space-y-4 transition-colors ${
-                  isCompleted ? "border-pass/40" : ""
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`bg-panel border rounded-lg p-5 space-y-4 transition-all ${
+                  isCompleted ? "border-pass/40" : "border-line"
+                } ${isDragging ? "opacity-40 scale-[0.99] border-dashed border-accent" : ""} ${
+                  isDragOver ? "border-accent bg-panel-2/80" : ""
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Drag Handle Icon */}
+                    <div
+                      className="cursor-grab active:cursor-grabbing text-text-dim hover:text-accent select-none text-base px-1 py-0.5"
+                      title="Drag to reorder"
+                    >
+                      ⠿
+                    </div>
+
+                    {/* Up / Down Quick Arrow Controls */}
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        onClick={() => moveCourse(index, -1)}
+                        disabled={index === 0}
+                        className="text-[10px] text-text-dim hover:text-accent disabled:opacity-20 leading-none px-0.5"
+                        title="Move Up"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => moveCourse(index, 1)}
+                        disabled={index === courses.length - 1}
+                        className="text-[10px] text-text-dim hover:text-accent disabled:opacity-20 leading-none px-0.5"
+                        title="Move Down"
+                      >
+                        ▼
+                      </button>
+                    </div>
+
                     <h4 className="font-heading font-bold text-base text-text truncate">
                       {course.title}
                     </h4>
