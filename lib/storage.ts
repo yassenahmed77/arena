@@ -22,6 +22,7 @@ export interface LogEntry {
   feedback: string;
   passed: boolean;
   date: string;
+  code?: string;
 }
 
 export interface ProgressState {
@@ -61,6 +62,7 @@ export interface ShopifyLogEntry {
   feedback: string;
   mastered: boolean;
   date: string;
+  answer?: string;
 }
 
 export interface ShopifyProgressState {

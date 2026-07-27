@@ -33,6 +33,7 @@ export default function Arena() {
     log: [],
   });
   const [showProfile, setShowProfile] = useState(false);
+  const [expandedCodeIdx, setExpandedCodeIdx] = useState<number | null>(null);
 
   // Problem State
   const [problem, setProblem] = useState<Problem | null>(null);
@@ -210,7 +211,6 @@ Respond with ONLY raw JSON, no markdown fences:
 
     if (allTestsPassed && review.levelUp) {
       newSolved += 1;
-      // Check if newSolved crossed into a new Belt threshold
       const oldBeltIdx = getBeltIndex(progress.solved);
       const newBeltIdx = getBeltIndex(newSolved);
       if (newBeltIdx > oldBeltIdx) {
@@ -228,7 +228,7 @@ Respond with ONLY raw JSON, no markdown fences:
     // Rolling history of concepts (cap at 10)
     const newHistory = [...progress.history, problem.concept].slice(-10);
 
-    // Always record log entry for Profile
+    // Record log entry with submitted code
     const newLogEntry: LogEntry = {
       title: problem.title,
       concept: problem.concept,
@@ -236,6 +236,7 @@ Respond with ONLY raw JSON, no markdown fences:
       feedback: review.feedback,
       passed: allTestsPassed && review.levelUp,
       date: new Date().toISOString(),
+      code: code,
     };
 
     const newLog = [newLogEntry, ...(progress.log || [])].slice(0, 50);
@@ -332,33 +333,53 @@ Respond with ONLY raw JSON, no markdown fences:
               لسه ملحلتش أي مسألة. حل مسألة وسبمت ريفيو، هتلاقيها هنا.
             </div>
           ) : (
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-              {progress.log.map((entry, idx) => (
-                <div
-                  key={idx}
-                  className="p-3.5 bg-panel-2 border border-line rounded space-y-2 text-xs font-mono"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-text truncate">{entry.title}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                        entry.passed
-                          ? "bg-pass/10 text-pass border border-pass/30"
-                          : "bg-fail/10 text-fail border border-fail/30"
-                      }`}
-                    >
-                      {entry.passed ? "PASSED" : "NOT PASSED"}
-                    </span>
+            <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1">
+              {progress.log.map((entry, idx) => {
+                const isExpanded = expandedCodeIdx === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="p-3.5 bg-panel-2 border border-line rounded space-y-2.5 text-xs font-mono"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-text truncate">{entry.title}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                          entry.passed
+                            ? "bg-pass/10 text-pass border border-pass/30"
+                            : "bg-fail/10 text-fail border border-fail/30"
+                        }`}
+                      >
+                        {entry.passed ? "PASSED" : "NOT PASSED"}
+                      </span>
+                    </div>
+                    <div className="text-text-dim text-[11px]">
+                      {entry.concept} · {entry.difficulty} ·{" "}
+                      {new Date(entry.date).toLocaleDateString()}
+                    </div>
+                    <div className="text-text text-xs leading-relaxed pt-1 border-t border-line/50">
+                      {entry.feedback}
+                    </div>
+
+                    {/* Saved Answer/Code Block */}
+                    {entry.code && (
+                      <div className="pt-1">
+                        <button
+                          onClick={() => setExpandedCodeIdx(isExpanded ? null : idx)}
+                          className="text-[11px] font-mono text-accent hover:underline focus:outline-none flex items-center gap-1"
+                        >
+                          <span>{isExpanded ? "▼ Hide My Solution Code" : "▶ View My Solution Code"}</span>
+                        </button>
+                        {isExpanded && (
+                          <pre className="mt-2 p-3 bg-bg border border-line rounded text-[11px] font-mono text-text overflow-x-auto max-h-[200px]">
+                            <code>{entry.code}</code>
+                          </pre>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-text-dim text-[11px]">
-                    {entry.concept} · {entry.difficulty} ·{" "}
-                    {new Date(entry.date).toLocaleDateString()}
-                  </div>
-                  <div className="text-text text-xs leading-relaxed pt-1 border-t border-line/50">
-                    {entry.feedback}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

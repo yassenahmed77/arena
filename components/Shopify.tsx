@@ -23,6 +23,7 @@ export default function Shopify() {
     log: [],
   });
   const [showLog, setShowLog] = useState(false);
+  const [expandedAnswerIdx, setExpandedAnswerIdx] = useState<number | null>(null);
 
   // Current Task State
   const [taskData, setTaskData] = useState<ShopifyTaskResponse | null>(null);
@@ -55,7 +56,6 @@ export default function Shopify() {
 
     const mod = SHOPIFY_MODULES[moduleIndex] || SHOPIFY_MODULES[0];
 
-    // Try Claude API if key is present, fallback to free local generator
     try {
       const systemPrompt = `You are a Shopify development mentor building a hands-on curriculum for a self-taught frontend developer named Yaseen who is pivoting toward Shopify freelancing (theme + app dev for merchant clients). Generate ONE practical task for the given module. Write the task itself in Franco-Arabic (Arabic transliterated in Latin letters); any code, Liquid syntax, or API field names stay in normal code syntax within the text. Respond with ONLY raw JSON, no markdown fences:
 {"task": "string (Franco-Arabic, a concrete practical exercise)", "hint": "string (Franco-Arabic, one short optional hint)", "expectedFormat": "code"|"explanation"|"mixed"}`;
@@ -71,7 +71,7 @@ export default function Shopify() {
         return;
       }
     } catch (e) {
-      // Fallback to local problem bank cleanly
+      // Fallback to local problem bank
     }
 
     const localTask = getLocalShopifyTask(mod, iteration);
@@ -107,7 +107,6 @@ export default function Shopify() {
 
     setReviewResult(review);
 
-    // If mastered, update state
     let newMasteredIds = [...progress.masteredModuleIds];
     let newModuleIndex = progress.currentModuleIndex;
 
@@ -127,6 +126,7 @@ export default function Shopify() {
       feedback: review.feedback,
       mastered: review.mastered,
       date: new Date().toISOString(),
+      answer: answer,
     };
 
     const newLog = [newLogEntry, ...progress.log].slice(0, 50);
@@ -223,34 +223,54 @@ export default function Shopify() {
               لسه ملحلتش أي task في Shopify. جاوب على تاسك وسبمت ريفيو، هتلاقيها هنا.
             </div>
           ) : (
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-              {progress.log.map((entry, idx) => (
-                <div
-                  key={idx}
-                  className="p-3.5 bg-panel-2 border border-line rounded space-y-2 text-xs font-mono"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-text truncate">
-                      {entry.moduleTitle}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                        entry.mastered
-                          ? "bg-pass/10 text-pass border border-pass/30"
-                          : "bg-fail/10 text-fail border border-fail/30"
-                      }`}
-                    >
-                      {entry.mastered ? "MASTERED" : "NOT MASTERED"}
-                    </span>
+            <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1">
+              {progress.log.map((entry, idx) => {
+                const isExpanded = expandedAnswerIdx === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="p-3.5 bg-panel-2 border border-line rounded space-y-2.5 text-xs font-mono"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-text truncate">
+                        {entry.moduleTitle}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                          entry.mastered
+                            ? "bg-pass/10 text-pass border border-pass/30"
+                            : "bg-fail/10 text-fail border border-fail/30"
+                        }`}
+                      >
+                        {entry.mastered ? "MASTERED" : "NOT MASTERED"}
+                      </span>
+                    </div>
+                    <div className="text-text-dim text-[11px] italic truncate">
+                      Task: {entry.task}
+                    </div>
+                    <div className="text-text text-xs leading-relaxed pt-1 border-t border-line/50">
+                      {entry.feedback}
+                    </div>
+
+                    {/* Saved Answer Block */}
+                    {entry.answer && (
+                      <div className="pt-1">
+                        <button
+                          onClick={() => setExpandedAnswerIdx(isExpanded ? null : idx)}
+                          className="text-[11px] font-mono text-accent hover:underline focus:outline-none flex items-center gap-1"
+                        >
+                          <span>{isExpanded ? "▼ Hide My Submitted Answer" : "▶ View My Submitted Answer"}</span>
+                        </button>
+                        {isExpanded && (
+                          <pre className="mt-2 p-3 bg-bg border border-line rounded text-[11px] font-mono text-text overflow-x-auto max-h-[200px] whitespace-pre-wrap">
+                            <code>{entry.answer}</code>
+                          </pre>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-text-dim text-[11px] italic truncate">
-                    Task: {entry.task}
-                  </div>
-                  <div className="text-text text-xs leading-relaxed pt-1 border-t border-line/50">
-                    {entry.feedback}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
