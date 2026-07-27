@@ -88,7 +88,7 @@ export default function Arena() {
     const systemPrompt = `You are a personal coding trainer for Yaseen, a self-taught frontend developer training to become an elite Code Master capable of architecting world-class systems (e-commerce platforms like Shopify, merchant inventory systems, doctor clinic booking platforms).
 
 Generate ONE JavaScript logic problem targeted at difficulty: ${targetDiff}.
-Write the "title" and "description" in Franco-Arabic (Arabic words transliterated in Latin letters). Keep code syntax, example inputs/outputs, and function names in standard JavaScript.
+Write the "title" and "description" in Franco-Arabic (Arabic transliterated in Latin letters). Keep code syntax, example inputs/outputs, and function names in standard JavaScript.
 
 ${
   weakList.length > 0
@@ -183,13 +183,14 @@ Respond ONLY with raw JSON (no markdown fences, no preamble):
 Your goal is to train Yaseen to build real production-grade systems (Shopify, inventory, booking platforms).
 
 Rules for review:
-1. Respond in Franco-Arabic (Arabic transliterated in Latin letters), 2-5 sentences: what's good, what's weak, one concrete improvement tip.
-2. Mark "levelUp": true ONLY if the solution is solid, clean, and passed all tests (${passCount}/${totalTests}).
-3. If the solution passes tests but is hacky, brute-forced, or accidentally correct, you MUST return "levelUp": false with specific feedback on why and how to refactor.
-4. If there is a real weakness, include 1-2 short concept tags in "weakAreas".
+1. Respond in Franco-Arabic (Arabic transliterated in Latin letters).
+2. Write 2-5 sentences: what's good, what's weak, AND ALWAYS include a dedicated line: "💡 Level Up Tip: [one concrete refactoring, performance optimization, or clean code technique for Yaseen]".
+3. Mark "levelUp": true ONLY if the solution is solid, clean, and passed all tests (${passCount}/${totalTests}).
+4. If the solution passes tests but is hacky, brute-forced, or accidentally correct, you MUST return "levelUp": false with specific feedback on why and how to refactor.
+5. If there is a real weakness, include 1-2 short concept tags in "weakAreas".
 
 Respond with ONLY raw JSON, no markdown fences:
-{"feedback": "Franco-Arabic review text", "weakAreas": ["concept tags"], "levelUp": boolean}`;
+{"feedback": "Franco-Arabic review text including the 💡 Level Up Tip line", "weakAreas": ["concept tags"], "levelUp": boolean}`;
 
       const userPrompt = `Problem: ${problem.title} (${problem.concept}, ${problem.difficulty}).\nTest pass status: ${passCount}/${totalTests} passed.\nSubmitted code:\n${code}`;
 

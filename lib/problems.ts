@@ -225,13 +225,11 @@ export function getRandomProblem(
   targetDifficulty: "easy" | "medium" | "hard",
   recentConcepts: string[] = []
 ): Problem {
-  // Filter by difficulty first
   let candidates = PROBLEM_BANK.filter((p) => p.difficulty === targetDifficulty);
   if (candidates.length === 0) {
     candidates = PROBLEM_BANK;
   }
 
-  // Avoid repeating the exact concept back-to-back if possible
   const nonRepeated = candidates.filter((p) => !recentConcepts.includes(p.concept));
   const pool = nonRepeated.length > 0 ? nonRepeated : candidates;
 
@@ -247,25 +245,27 @@ export function generateLocalReview(
 ): { feedback: string; weakAreas: string[]; levelUp: boolean } {
   const allPassed = passCount === totalTests;
 
-  if (allPassed) {
-    let tip = "";
-    if (userCode.includes("for(") || userCode.includes("for (")) {
-      tip = "El el-loop bta3ak mumtaz! Momken fel marrat el gaya tgarrab HOFs zay .reduce() aw .filter() 3ashan tekon cleaner.";
-    } else if (userCode.includes(".filter") || userCode.includes(".map")) {
-      tip = "Istikhdam ra'e3 l-Higher-Order Functions fel JavaScript!";
-    } else {
-      tip = "El-solution bta3tk munazama w 100% wa'edah!";
-    }
+  let tip = "";
+  if (userCode.includes("for(") || userCode.includes("for (")) {
+    tip = "💡 Level Up Tip: El-loop bta3ak mumtaz! Momken fel marrat el-gaya tgarrab HOFs zay .reduce() aw .filter() 3ashan tekon cleaner w declarative.";
+  } else if (userCode.includes(".filter") || userCode.includes(".map")) {
+    tip = "💡 Level Up Tip: Istikhdam ra'e3 l-Higher-Order Functions! Gareb tkhali el-arrow function inlined aw tkhali el-return implicit l-cleaner code.";
+  } else if (userCode.includes("let ")) {
+    tip = "💡 Level Up Tip: Momken tkhali el-variables 'const' badal 'let' law mesh bte3mel re-assign 3ashan t-prevent accidental mutations.";
+  } else {
+    tip = "💡 Level Up Tip: Dayman e3mel check 3ala edge cases zay empty arrays, null values, aw negative numbers qabl el-processing.";
+  }
 
+  if (allPassed) {
     return {
-      feedback: `Ash-ta ya basha! El-code passed kol el-test cases (${passCount}/${totalTests}). ${tip} Khalik mastamirr kda!`,
+      feedback: `Ash-ta ya basha! El-code passed kol el-test cases (${passCount}/${totalTests}). El-solution bta3tk munazama w 100% wa'edah!\n\n${tip}\n\nKhalik mastamirr kda!`,
       weakAreas: [],
       levelUp: true,
     };
   } else {
     const failedCount = totalTests - passCount;
     return {
-      feedback: `El-code sallam ${passCount} mn asel ${totalTests} test cases (${failedCount} failed). Ef7as el-edge cases zay el-empty arrays, negative numbers, aw formatting. Gareb tani w hatgebha!`,
+      feedback: `El-code sallam ${passCount} mn asel ${totalTests} test cases (${failedCount} failed). Ef7as el-edge cases zay el-empty arrays aw formatting.\n\n${tip}\n\nGareb tani w hatgebha!`,
       weakAreas: [problem.concept],
       levelUp: false,
     };
