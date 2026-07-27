@@ -15,10 +15,18 @@ export default function Home() {
         {/* Top row */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
           <div className="flex-1 min-w-0">
-            <h1 className="font-heading font-bold text-3xl tracking-tight text-text">
-              ARENA
-            </h1>
-            <p className="text-xs font-mono text-text-dim mt-1 max-w-[500px]">
+            <div className="flex items-center gap-3">
+              {/* ARENA Logo */}
+              <img
+                src="/arena-icon.svg"
+                alt="ARENA Logo"
+                className="w-9 h-9 rounded-lg object-contain flex-shrink-0"
+              />
+              <h1 className="font-heading font-bold text-3xl tracking-tight text-text">
+                ARENA
+              </h1>
+            </div>
+            <p className="text-xs font-mono text-text-dim mt-1.5 max-w-[500px]">
               Code sparring + daily checklist + Shopify mastery + courses tracker. One place, everything you build lives here.
             </p>
           </div>

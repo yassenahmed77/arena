@@ -20,9 +20,9 @@ export const metadata: Metadata = {
   title: "ARENA",
   description: "Code sparring + daily checklist + Shopify mastery + courses tracker. One place, everything you build lives here.",
   icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    icon: "/arena-icon.svg",
+    shortcut: "/arena-icon.svg",
+    apple: "/arena-icon.svg",
   },
 };
 

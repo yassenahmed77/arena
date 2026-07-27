@@ -1,0 +1,19 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="beltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f2a65a"/>
+      <stop offset="100%" stop-color="#e8c547"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background badge -->
+  <rect x="4" y="4" width="192" height="192" rx="42" fill="#1b1e28" stroke="#2c3040" stroke-width="2"/>
+
+  <!-- belt chevron forming an "A" apex -->
+  <path d="M100 46 L156 148 L128 148 L100 96 L72 148 L44 148 Z" fill="url(#beltGrad)"/>
+
+  <!-- belt stripe / knot detail -->
+  <rect x="76" y="118" width="48" height="12" rx="3" fill="#14161c"/>
+  <rect x="86" y="118" width="10" height="12" fill="#59c9a5"/>
+  <rect x="104" y="118" width="10" height="12" fill="#e5636b"/>
+</svg>
