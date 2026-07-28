@@ -5,10 +5,10 @@ import Arena from "@/components/Arena";
 import Checklist from "@/components/Checklist";
 import Shopify from "@/components/Shopify";
 import Courses from "@/components/Courses";
+import Docs from "@/components/Docs";
 
 export default function Home() {
-  // Default active tab set to "courses"
-  const [activeTab, setActiveTab] = useState<"arena" | "checklist" | "shopify" | "courses">("courses");
+  const [activeTab, setActiveTab] = useState<"courses" | "arena" | "checklist" | "shopify" | "docs">("courses");
 
   return (
     <main className="max-w-[820px] mx-auto px-6 py-8 min-h-screen flex flex-col justify-between">
@@ -28,12 +28,12 @@ export default function Home() {
               </h1>
             </div>
             <p className="text-xs font-mono text-text-dim mt-1.5 max-w-[500px]">
-              Code sparring + daily checklist + Shopify mastery + courses tracker. One place, everything you build lives here.
+              Code sparring + daily checklist + Shopify mastery + courses + JS docs. One place, everything you build lives here.
             </p>
           </div>
 
           {/* Spacious Pill Tab Switcher */}
-          <nav className="inline-flex items-center gap-1.5 p-1.5 bg-panel border border-line rounded-full flex-shrink-0 self-start md:self-auto">
+          <nav className="inline-flex items-center gap-1.5 p-1.5 bg-panel border border-line rounded-full flex-shrink-0 self-start md:self-auto overflow-x-auto max-w-full">
             <button
               onClick={() => setActiveTab("courses")}
               className={`min-h-[36px] px-3.5 sm:px-4 py-1.5 font-mono text-xs font-bold rounded-full transition-all duration-150 ${
@@ -74,6 +74,16 @@ export default function Home() {
             >
               Shopify
             </button>
+            <button
+              onClick={() => setActiveTab("docs")}
+              className={`min-h-[36px] px-3.5 sm:px-4 py-1.5 font-mono text-xs font-bold rounded-full transition-all duration-150 ${
+                activeTab === "docs"
+                  ? "bg-accent text-bg"
+                  : "text-text-dim hover:text-text"
+              }`}
+            >
+              Docs
+            </button>
           </nav>
         </header>
 
@@ -84,8 +94,10 @@ export default function Home() {
           <Arena />
         ) : activeTab === "checklist" ? (
           <Checklist />
-        ) : (
+        ) : activeTab === "shopify" ? (
           <Shopify />
+        ) : (
+          <Docs />
         )}
       </div>
 
