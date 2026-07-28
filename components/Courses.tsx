@@ -103,39 +103,104 @@ export default function Courses() {
     setDragOverIndex(null);
   };
 
-  const moveCourse = (index: number, direction: -1 | 1) => {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= courses.length) return;
+  const moveCourse = (fromOrigIndex: number, toOrigIndex: number) => {
+    if (toOrigIndex < 0 || toOrigIndex >= courses.length) return;
 
     const updated = [...courses];
-    const [removed] = updated.splice(index, 1);
-    updated.splice(targetIndex, 0, removed);
+    const [removed] = updated.splice(fromOrigIndex, 1);
+    updated.splice(toOrigIndex, 0, removed);
 
     setCourses(updated);
     saveCourses(updated);
   };
 
-  // Overall progress calculations
+  // Overall progress & stats calculations
+  const lessonCourses = courses.filter((c) => (c.unitType || "lessons") === "lessons");
+  const hourCourses = courses.filter((c) => c.unitType === "hours");
+
+  const totalLessonsAll = lessonCourses.reduce((sum, c) => sum + c.totalLessons, 0);
+  const completedLessonsAll = lessonCourses.reduce((sum, c) => sum + c.completedLessons, 0);
+
+  const totalHoursAll = Number(hourCourses.reduce((sum, c) => sum + c.totalLessons, 0).toFixed(1));
+  const completedHoursAll = Number(hourCourses.reduce((sum, c) => sum + c.completedLessons, 0).toFixed(1));
+
+  const completedCoursesCount = courses.filter((c) => c.completedLessons >= c.totalLessons).length;
+
   const totalUnitsAll = courses.reduce((sum, c) => sum + c.totalLessons, 0);
   const completedUnitsAll = courses.reduce((sum, c) => sum + c.completedLessons, 0);
   const overallPercentage = totalUnitsAll > 0 ? Math.round((completedUnitsAll / totalUnitsAll) * 100) : 0;
 
+  // Sort courses so active (incomplete) ones stay at the top and completed ones go to the bottom
+  const displayCourses = courses
+    .map((c, origIndex) => ({ ...c, origIndex }))
+    .sort((a, b) => {
+      const aDone = a.completedLessons >= a.totalLessons;
+      const bDone = b.completedLessons >= b.totalLessons;
+      if (aDone === bDone) return 0;
+      return aDone ? 1 : -1;
+    });
+
   return (
     <div className="space-y-6 w-full">
-      {/* Overall Progress Banner */}
-      <div className="bg-panel border border-line rounded-lg p-5 space-y-3">
-        <div className="flex items-center justify-between">
+      {/* Overall Progress Banner & Stats Cards */}
+      <div className="bg-panel border border-line rounded-lg p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-heading font-bold text-lg text-text">
               Courses Dashboard
             </h2>
             <p className="text-xs font-mono text-text-dim mt-0.5">
-              {courses.length} {courses.length === 1 ? "Course" : "Courses"} · Total Progress ({overallPercentage}%)
+              {courses.length} {courses.length === 1 ? "Course" : "Courses"} Total · {completedCoursesCount} Completed
             </p>
           </div>
           <span className="text-sm font-mono font-bold text-accent bg-accent/10 px-3 py-1 rounded border border-accent/30">
-            {overallPercentage}%
+            {overallPercentage}% Completed
           </span>
+        </div>
+
+        {/* Detailed Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-bg border border-line p-3 rounded-lg flex flex-col justify-between">
+            <span className="text-[11px] font-mono text-text-dim uppercase tracking-wider">
+              Lessons Progress
+            </span>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="text-base font-bold font-mono text-text">
+                {completedLessonsAll} / {totalLessonsAll}
+              </span>
+              <span className="text-xs font-mono text-accent font-semibold">
+                {totalLessonsAll > 0 ? Math.round((completedLessonsAll / totalLessonsAll) * 100) : 0}%
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-bg border border-line p-3 rounded-lg flex flex-col justify-between">
+            <span className="text-[11px] font-mono text-text-dim uppercase tracking-wider">
+              Hours Progress
+            </span>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="text-base font-bold font-mono text-text">
+                {completedHoursAll} / {totalHoursAll} hrs
+              </span>
+              <span className="text-xs font-mono text-accent font-semibold">
+                {totalHoursAll > 0 ? Math.round((completedHoursAll / totalHoursAll) * 100) : 0}%
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-bg border border-line p-3 rounded-lg flex flex-col justify-between">
+            <span className="text-[11px] font-mono text-text-dim uppercase tracking-wider">
+              Courses Finished
+            </span>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="text-base font-bold font-mono text-text">
+                {completedCoursesCount} / {courses.length}
+              </span>
+              <span className="text-xs font-mono text-pass font-semibold">
+                {courses.length > 0 ? Math.round((completedCoursesCount / courses.length) * 100) : 0}%
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Overall Progress Bar */}
@@ -196,30 +261,33 @@ export default function Courses() {
 
       {/* Courses List with Drag & Drop Reordering */}
       <div className="space-y-4">
-        {courses.length === 0 ? (
+        {displayCourses.length === 0 ? (
           <div className="bg-panel border border-line rounded-lg py-12 text-center text-text-dim text-sm font-mono italic">
             مفيش كورسات مضافة لسه. ضيف كورس جديد من فوق.
           </div>
         ) : (
-          courses.map((course, index) => {
+          displayCourses.map((course, displayIndex) => {
             const isHours = course.unitType === "hours";
             const unitLabel = isHours ? "Hours" : "Lessons";
             const pct = Math.round((course.completedLessons / course.totalLessons) * 100);
             const isCompleted = course.completedLessons >= course.totalLessons;
             const stepDelta = isHours ? 0.5 : 1;
-            const isDragging = draggedIndex === index;
-            const isDragOver = dragOverIndex === index;
+            const isDragging = draggedIndex === course.origIndex;
+            const isDragOver = dragOverIndex === course.origIndex;
+
+            const prevOrigIndex = displayCourses[displayIndex - 1]?.origIndex;
+            const nextOrigIndex = displayCourses[displayIndex + 1]?.origIndex;
 
             return (
               <div
                 key={course.id}
                 draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDrop={(e) => handleDrop(e, index)}
+                onDragStart={(e) => handleDragStart(e, course.origIndex)}
+                onDragOver={(e) => handleDragOver(e, course.origIndex)}
+                onDrop={(e) => handleDrop(e, course.origIndex)}
                 onDragEnd={handleDragEnd}
                 className={`bg-panel border rounded-lg p-5 space-y-4 transition-all ${
-                  isCompleted ? "border-pass/40" : "border-line"
+                  isCompleted ? "border-pass/40 bg-panel/60" : "border-line"
                 } ${isDragging ? "opacity-40 scale-[0.99] border-dashed border-accent" : ""} ${
                   isDragOver ? "border-accent bg-panel-2/80" : ""
                 }`}
@@ -237,16 +305,16 @@ export default function Courses() {
                     {/* Up / Down Quick Arrow Controls */}
                     <div className="flex flex-col gap-0.5">
                       <button
-                        onClick={() => moveCourse(index, -1)}
-                        disabled={index === 0}
+                        onClick={() => prevOrigIndex !== undefined && moveCourse(course.origIndex, prevOrigIndex)}
+                        disabled={displayIndex === 0}
                         className="text-[10px] text-text-dim hover:text-accent disabled:opacity-20 leading-none px-0.5"
                         title="Move Up"
                       >
                         ▲
                       </button>
                       <button
-                        onClick={() => moveCourse(index, 1)}
-                        disabled={index === courses.length - 1}
+                        onClick={() => nextOrigIndex !== undefined && moveCourse(course.origIndex, nextOrigIndex)}
+                        disabled={displayIndex === displayCourses.length - 1}
                         className="text-[10px] text-text-dim hover:text-accent disabled:opacity-20 leading-none px-0.5"
                         title="Move Down"
                       >
@@ -254,7 +322,7 @@ export default function Courses() {
                       </button>
                     </div>
 
-                    <h4 className="font-heading font-bold text-base text-text truncate">
+                    <h4 className={`font-heading font-bold text-base text-text truncate ${isCompleted ? "line-through opacity-80" : ""}`}>
                       {course.title}
                     </h4>
                     {course.platform && (

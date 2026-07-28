@@ -86,43 +86,46 @@ export default function Checklist() {
               مفيش مهام لسه. ضيف مهمة من فوق.
             </div>
           ) : (
-            tasks.map((task, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center justify-between gap-3 p-3 bg-panel-2 border border-line rounded transition-colors ${
-                  task.done ? "opacity-60" : ""
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <input
-                    type="checkbox"
-                    checked={task.done}
-                    onChange={() => handleToggleTask(idx)}
-                    className="w-4 h-4 rounded border-line bg-bg accent-accent cursor-pointer flex-shrink-0"
-                  />
-                  <span
-                    className={`text-sm text-text font-mono truncate ${
-                      task.done ? "line-through text-text-dim" : ""
-                    }`}
-                  >
-                    {task.text}
-                  </span>
-                  {task.daily && (
-                    <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded border border-line bg-bg text-text-dim flex-shrink-0">
-                      daily
-                    </span>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => handleDeleteTask(idx)}
-                  className="text-text-dim hover:text-fail px-2 py-1 text-xs font-mono min-h-[32px] transition-colors"
-                  title="Delete task"
+            tasks
+              .map((task, originalIndex) => ({ ...task, originalIndex }))
+              .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
+              .map((task) => (
+                <div
+                  key={task.originalIndex}
+                  className={`flex items-center justify-between gap-3 p-3 bg-panel-2 border border-line rounded transition-colors ${
+                    task.done ? "opacity-60 border-pass/30" : ""
+                  }`}
                 >
-                  ✕
-                </button>
-              </div>
-            ))
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <input
+                      type="checkbox"
+                      checked={task.done}
+                      onChange={() => handleToggleTask(task.originalIndex)}
+                      className="w-4 h-4 rounded border-line bg-bg accent-accent cursor-pointer flex-shrink-0"
+                    />
+                    <span
+                      className={`text-sm text-text font-mono truncate ${
+                        task.done ? "line-through text-text-dim" : ""
+                      }`}
+                    >
+                      {task.text}
+                    </span>
+                    {task.daily && (
+                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded border border-line bg-bg text-text-dim flex-shrink-0">
+                        daily
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteTask(task.originalIndex)}
+                    className="text-text-dim hover:text-fail px-2 py-1 text-xs font-mono min-h-[32px] transition-colors"
+                    title="Delete task"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))
           )}
         </div>
 
